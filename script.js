@@ -410,44 +410,58 @@ const velocityVal = document.getElementById('velocityVal');
 const forceVal = document.getElementById('forceVal');
 const earthDisplacementVal = document.getElementById('earthDisplacementVal');
 
-// --- Geolocation Tracking ---
-
+// --- HYBRID GEOLOCATION TRACKING ---
 function calculateHaversine(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Radius of the Earth in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
         Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
+    return R * c;
 }
 
+function broadcastLocation(lat, lon) {
+    myLat = lat;
+    myLon = lon;
+    if (database) {
+        database.ref('users/' + CLIENT_ID).update({
+            lat: lat,
+            lon: lon,
+            capsule: myCapsule,
+            timestamp: Date.now()
+        });
+    }
+}
+
+// 1. IP Geolocation Fallback (Instant, no permission required, city-level accuracy)
+fetch('https://ipapi.co/json/')
+    .then(res => res.json())
+    .then(data => {
+        // Only use IP if precise GPS hasn't locked on yet
+        if (data.latitude && data.longitude && myLat === null) {
+            broadcastLocation(data.latitude, data.longitude);
+        }
+    })
+    .catch(err => console.log("IP Geo fallback failed:", err));
+
+// 2. Precise GPS Tracking (Requires permission, high accuracy)
 if ("geolocation" in navigator) {
     navigator.geolocation.watchPosition((position) => {
-        const { latitude, longitude } = position.coords;
-        // Update global coords for compass
-        myLat = latitude;
-        myLon = longitude;
-
-        // Push to Firebase instantly
-        if (database) {
-            database.ref('users/' + CLIENT_ID).update({
-                lat: latitude,
-                lon: longitude,
-                capsule: myCapsule,
-                timestamp: Date.now()
-            });
-        }
+        broadcastLocation(position.coords.latitude, position.coords.longitude);
     }, (err) => {
-        earthDistanceStr = "GPS Error: " + err.message;
+        console.warn("GPS Error:", err.message);
+        if (myLat === null) {
+            earthDistanceStr = "GPS Denied. Using IP Location...";
+        }
     }, {
         enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 5000
+        maximumAge: 60000, 
+        timeout: 27000 // Much more relaxed timeout for mobile
     });
 } else {
-    earthDistanceStr = "GPS Not Supported";
+    if (myLat === null) earthDistanceStr = "GPS Not Supported";
 }
 
 // --- FIREBASE REALTIME LISTENER (Replaces 2-second polling) ---
@@ -462,7 +476,8 @@ if (database) {
             let partnerLoc = null;
 
             for (let id of users) {
-                if (id !== CLIENT_ID && (Date.now() - data[id].timestamp < 10 * 60 * 1000)) {
+                // Keep partner data alive for 30 days instead of 10 minutes, so it works even if they haven't opened the app recently
+                if (id !== CLIENT_ID && (Date.now() - data[id].timestamp < 30 * 24 * 60 * 60 * 1000)) {
                     partnerLoc = data[id];
                     break;
                 }
@@ -500,7 +515,10 @@ if (database) {
                 }
             }
         } else if (users.length === 1 && users[0] === CLIENT_ID) {
-            earthDistanceStr = "Waiting for partner...";
+            // Only overwrite if we didn't already set a GPS error
+            if (earthDistanceStr === "Waiting for partner...") {
+                earthDistanceStr = "Waiting for partner to open app...";
+            }
         }
     });
 }
