@@ -16,11 +16,11 @@ const LAST_MET_DATE = new Date('2026-05-22T00:00:00').getTime();
 
 // Seeded RNG for the May 22 Star Map
 function mulberry32(a) {
-    return function() {
-      var t = a += 0x6D2B79F5;
-      t = Math.imul(t ^ t >>> 15, t | 1);
-      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    return function () {
+        var t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
     }
 }
 const starMapRng = mulberry32(20260522); // Seed: May 22 2026
@@ -29,15 +29,15 @@ const starMapRng = mulberry32(20260522); // Seed: May 22 2026
 // Coordinates normalized 0.0 to 1.0 mapping the visible dome
 const raigarhConstellations = [
     // Ursa Major (Big Dipper) - Northern Sky
-    [ {x:0.15, y:0.20}, {x:0.20, y:0.22}, {x:0.24, y:0.25}, {x:0.28, y:0.32}, {x:0.26, y:0.38}, {x:0.33, y:0.40}, {x:0.35, y:0.34}, {x:0.28, y:0.32} ],
+    [{ x: 0.15, y: 0.20 }, { x: 0.20, y: 0.22 }, { x: 0.24, y: 0.25 }, { x: 0.28, y: 0.32 }, { x: 0.26, y: 0.38 }, { x: 0.33, y: 0.40 }, { x: 0.35, y: 0.34 }, { x: 0.28, y: 0.32 }],
     // Boötes (Arcturus) - Near Zenith
-    [ {x:0.45, y:0.30}, {x:0.40, y:0.40}, {x:0.35, y:0.50}, {x:0.45, y:0.55}, {x:0.52, y:0.47}, {x:0.50, y:0.40}, {x:0.45, y:0.30} ],
+    [{ x: 0.45, y: 0.30 }, { x: 0.40, y: 0.40 }, { x: 0.35, y: 0.50 }, { x: 0.45, y: 0.55 }, { x: 0.52, y: 0.47 }, { x: 0.50, y: 0.40 }, { x: 0.45, y: 0.30 }],
     // Leo - Western Sky
-    [ {x:0.75, y:0.50}, {x:0.80, y:0.43}, {x:0.87, y:0.45}, {x:0.93, y:0.53}, {x:0.85, y:0.57}, {x:0.75, y:0.50} ],
+    [{ x: 0.75, y: 0.50 }, { x: 0.80, y: 0.43 }, { x: 0.87, y: 0.45 }, { x: 0.93, y: 0.53 }, { x: 0.85, y: 0.57 }, { x: 0.75, y: 0.50 }],
     // Scorpius - Rising South-East
-    [ {x:0.20, y:0.80}, {x:0.25, y:0.75}, {x:0.22, y:0.70}, {x:0.18, y:0.67}, {x:0.12, y:0.70} ],
+    [{ x: 0.20, y: 0.80 }, { x: 0.25, y: 0.75 }, { x: 0.22, y: 0.70 }, { x: 0.18, y: 0.67 }, { x: 0.12, y: 0.70 }],
     // Virgo (Spica) - Southern Sky
-    [ {x:0.60, y:0.65}, {x:0.65, y:0.60}, {x:0.70, y:0.70}, {x:0.75, y:0.80} ]
+    [{ x: 0.60, y: 0.65 }, { x: 0.65, y: 0.60 }, { x: 0.70, y: 0.70 }, { x: 0.75, y: 0.80 }]
 ];
 
 const MAP_SIZE = 2500;
@@ -80,28 +80,28 @@ resizeHome();
 function drawHomeStars() {
     homeCtx.fillStyle = '#010306';
     homeCtx.fillRect(0, 0, homeCanvas.width, homeCanvas.height);
-    
+
     // Slowly pan the star map
     const timeOffset = Date.now() * 0.005;
-    
+
     // Draw constellation lines first
     homeCtx.strokeStyle = 'rgba(0, 243, 255, 0.25)';
     homeCtx.lineWidth = 1;
     homeCtx.beginPath();
-    
+
     raigarhConstellations.forEach(constellation => {
         for (let i = 0; i < constellation.length - 1; i++) {
             const s1 = constellation[i].starRef;
-            const s2 = constellation[i+1].starRef;
-            
+            const s2 = constellation[i + 1].starRef;
+
             let drawX1 = (s1.x - timeOffset) % MAP_SIZE;
             if (drawX1 < 0) drawX1 += MAP_SIZE;
             let drawY1 = s1.y % MAP_SIZE;
-            
+
             let drawX2 = (s2.x - timeOffset) % MAP_SIZE;
             if (drawX2 < 0) drawX2 += MAP_SIZE;
             let drawY2 = s2.y % MAP_SIZE;
-            
+
             // Prevent drawing lines that wrap across the entire screen
             if (Math.abs(drawX1 - drawX2) < 400 && Math.abs(drawY1 - drawY2) < 400) {
                 homeCtx.moveTo(drawX1, drawY1);
@@ -110,7 +110,7 @@ function drawHomeStars() {
         }
     });
     homeCtx.stroke();
-    
+
     // Draw stars
     homeStars.forEach(s => {
         s.twinkle += s.speed;
@@ -118,11 +118,11 @@ function drawHomeStars() {
         homeCtx.globalAlpha = Math.max(0, alpha);
         homeCtx.fillStyle = s.isConstellation ? '#aaffff' : '#ffffff';
         homeCtx.beginPath();
-        
+
         let drawX = (s.x - timeOffset) % MAP_SIZE;
         if (drawX < 0) drawX += MAP_SIZE;
         let drawY = s.y % MAP_SIZE;
-        
+
         // Render only if within visible viewport to save performance
         if (drawX < homeCanvas.width + 10 && drawY < homeCanvas.height + 10) {
             homeCtx.arc(drawX, drawY, s.isConstellation ? s.size * 1.5 : s.size, 0, Math.PI * 2);
@@ -134,45 +134,45 @@ function drawHomeStars() {
 
 function updateHomeScreen() {
     if (homeScreen.classList.contains('fade-out')) return;
-    
+
     drawHomeStars();
-    
+
     // Date display
     const now = new Date();
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     homeDateEl.textContent = dayNames[now.getDay()] + ' ' + now.getDate();
-    
+
     // Days together since May 22, 2026
     const elapsedMs = Date.now() - LAST_MET_DATE;
     const daysTogether = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
     homeTogetherEl.textContent = '❤️ ' + daysTogether + ' days together';
-    
+
     // Elapsed breakdown
-    const eDays = Math.floor(elapsedMs / (1000*60*60*24));
-    const eHrs = Math.floor((elapsedMs % (1000*60*60*24)) / (1000*60*60));
-    const eMins = Math.floor((elapsedMs % (1000*60*60)) / (1000*60));
-    const eSecs = Math.floor((elapsedMs % (1000*60)) / 1000);
+    const eDays = Math.floor(elapsedMs / (1000 * 60 * 60 * 24));
+    const eHrs = Math.floor((elapsedMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const eMins = Math.floor((elapsedMs % (1000 * 60 * 60)) / (1000 * 60));
+    const eSecs = Math.floor((elapsedMs % (1000 * 60)) / 1000);
     const pad = n => n.toString().padStart(2, '0');
     homeElapsedEl.textContent = eDays + ':' + pad(eHrs) + ':' + pad(eMins) + ':' + pad(eSecs);
-    
+
     // Load saved initials
     const myI = localStorage.getItem('myInitial') || 'Y';
     const herI = localStorage.getItem('herInitial') || 'H';
     homeMyInitEl.textContent = myI;
     homeHerInitEl.textContent = herI;
-    
+
     requestAnimationFrame(updateHomeScreen);
 }
 requestAnimationFrame(updateHomeScreen);
 
 // Countdown on home uses the same target
 function updateHomeCountdown() {
-    const tgt = parseInt(localStorage.getItem('orbitalTargetDate')) || (Date.now() + 22*24*60*60*1000);
+    const tgt = parseInt(localStorage.getItem('orbitalTargetDate')) || (Date.now() + 22 * 24 * 60 * 60 * 1000);
     const rem = Math.max(0, tgt - Date.now());
-    const d = Math.floor(rem / (1000*60*60*24));
-    const h = Math.floor((rem % (1000*60*60*24)) / (1000*60*60));
-    const m = Math.floor((rem % (1000*60*60)) / (1000*60));
-    const s = Math.floor((rem % (1000*60)) / 1000);
+    const d = Math.floor(rem / (1000 * 60 * 60 * 24));
+    const h = Math.floor((rem % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const m = Math.floor((rem % (1000 * 60 * 60)) / (1000 * 60));
+    const s = Math.floor((rem % (1000 * 60)) / 1000);
     const pad = n => n.toString().padStart(2, '0');
     homeTimerEl.textContent = pad(d) + ':' + pad(h) + ':' + pad(m) + ':' + pad(s);
 }
@@ -198,15 +198,18 @@ enterBtn.addEventListener('click', () => {
 window.addEventListener('resize', resizeHome);
 
 // --- FIREBASE SETUP ---
-// TODO: Replace this entire config object with the one from your Firebase Project settings
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyArbKfNeMyuGJgheGSSD4SQeySVUs3yYxc",
+    authDomain: "pokomeetsoon.firebaseapp.com",
+    projectId: "pokomeetsoon",
+    storageBucket: "pokomeetsoon.firebasestorage.app",
+    messagingSenderId: "435959832018",
+    appId: "1:435959832018:web:2d1241ba4c55ff19cb7c0b",
+    measurementId: "G-B2XLGPHHTX",
+    // NOTE: The databaseURL depends on the region you picked when creating the Realtime Database.
+    // If you picked US-Central, it is:
+    databaseURL: "https://pokomeetsoon-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase
@@ -291,7 +294,7 @@ lockCapsuleBtn.addEventListener('click', () => {
         myCapsule = capsuleInput.value.trim();
         localStorage.setItem('myCapsule', myCapsule);
         updateCapsuleView();
-        
+
         if (database && myLat !== null) {
             database.ref('users/' + CLIENT_ID).update({
                 capsule: myCapsule,
@@ -405,8 +408,8 @@ function calculateHaversine(lat1, lon1, lat2, lon2) {
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in km
 }
@@ -455,7 +458,7 @@ if (database) {
                     break;
                 }
             }
-            
+
             if (myLoc && partnerLoc) {
                 partnerLat = partnerLoc.lat;
                 partnerLon = partnerLoc.lon;
@@ -484,7 +487,7 @@ if (database) {
                 if (distMi < 0.1) {
                     earthDistanceStr = "0 mi (MERGED)";
                 } else {
-                    earthDistanceStr = distMi.toLocaleString(undefined, {maximumFractionDigits: 0}) + " mi";
+                    earthDistanceStr = distMi.toLocaleString(undefined, { maximumFractionDigits: 0 }) + " mi";
                 }
             }
         } else if (users.length === 1 && users[0] === CLIENT_ID) {
@@ -505,7 +508,7 @@ function drawGlow(x, y, radius, innerColor, outerColor) {
 
 function updateHUD(days, hours, mins, secs, r_real, v_real, f_real, merged) {
     const pad = n => n.toString().padStart(2, '0');
-    
+
     if (merged) {
         countdownEl.textContent = "00:00:00:00";
         countdownEl.style.color = "#ff3333";
@@ -518,7 +521,7 @@ function updateHUD(days, hours, mins, secs, r_real, v_real, f_real, merged) {
         velocityVal.textContent = (v_real / 1000).toFixed(2) + ' km/s';
         forceVal.textContent = f_real.toExponential(2) + ' N';
     }
-    
+
     // Update real-world distance based on GPS
     earthDisplacementVal.textContent = earthDistanceStr;
 }
@@ -540,24 +543,24 @@ function loop(time) {
 
         // Progress 1.0 (start) down to 0.0 (end)
         const progress = remainingMs / TOTAL_MS;
-        
+
         // Smooth easing for the radius to simulate drag increasing as they get closer
         // progress^2 makes it stay wider longer, then collapse faster
-        const r_progress = Math.pow(progress, 1.5); 
+        const r_progress = Math.pow(progress, 1.5);
 
         // Visual scale
         const MAX_R_PX = Math.min(width, height) * 0.35;
         const r_px = merged ? 0 : Math.max(0, MAX_R_PX * r_progress);
-        
+
         // Real-world values mapped from progress
         const r_real = merged ? MIN_R_REAL : MIN_R_REAL + (MAX_R_REAL - MIN_R_REAL) * r_progress;
-        
+
         // Physics derivations
         // F = G * m1 * m2 / r^2
         const F = G * (M1 * M2) / (r_real * r_real);
         // V = sqrt(G * M / (2r)) for equal masses orbiting barycenter
-        const V = Math.sqrt(G * M1 / (2 * r_real)); 
-        
+        const V = Math.sqrt(G * M1 / (2 * r_real));
+
         // Angular velocity for the simulation
         // v = omega * r -> omega = v / r
         // We scale omega visually so it looks pleasing on screen
@@ -594,7 +597,7 @@ function loop(time) {
         if (!merged) {
             const x1 = cx + (r_px / 2) * Math.cos(angle);
             const y1 = cy + (r_px / 2) * Math.sin(angle);
-            
+
             const x2 = cx - (r_px / 2) * Math.cos(angle);
             const y2 = cy - (r_px / 2) * Math.sin(angle);
 
@@ -618,21 +621,21 @@ function loop(time) {
             drawGlow(x1, y1, 18, '#ffffff', 'transparent');
             drawGlow(x1, y1, 12, 'rgba(0, 243, 255, 0.8)', 'transparent');
             ctx.fillStyle = '#aaffff';
-            ctx.beginPath(); ctx.arc(x1, y1, 6, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x1, y1, 6, 0, Math.PI * 2); ctx.fill();
 
             // Mass 2 (Orange/Red)
             drawGlow(x2, y2, 18, '#ffffff', 'transparent');
             drawGlow(x2, y2, 12, 'rgba(255, 100, 50, 0.8)', 'transparent');
             ctx.fillStyle = '#ffccaa';
-            ctx.beginPath(); ctx.arc(x2, y2, 6, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x2, y2, 6, 0, Math.PI * 2); ctx.fill();
 
         } else {
             // Merged state (Supernova/Blackhole effect)
             drawGlow(cx, cy, 80, 'rgba(255, 255, 255, 0.9)', 'transparent');
             drawGlow(cx, cy, 40, 'rgba(150, 50, 255, 0.8)', 'transparent');
             ctx.fillStyle = '#ffffff';
-            ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI*2); ctx.fill();
-            
+            ctx.beginPath(); ctx.arc(cx, cy, 15, 0, Math.PI * 2); ctx.fill();
+
             // Accretion disk lines
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
             ctx.beginPath();
@@ -647,7 +650,7 @@ function loop(time) {
 }
 
 // Helper to fast-forward the simulation from the console
-window.forceMergeIn = function(seconds) {
+window.forceMergeIn = function (seconds) {
     targetDate = Date.now() + seconds * 1000;
     localStorage.setItem('orbitalTargetDate', targetDate);
     console.log(`Simulation will merge in ${seconds} seconds.`);
@@ -661,20 +664,20 @@ let chirpEnabled = false;
 
 function initAudio() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
+
     oscillator = audioCtx.createOscillator();
     oscillator.type = 'sine';
     oscillator.frequency.value = 35; // Start at 35 Hz (LIGO lower band)
-    
+
     gainNode = audioCtx.createGain();
     gainNode.gain.value = 0;
-    
+
     // Subtle distortion for a "spacey" feel
     const filter = audioCtx.createBiquadFilter();
     filter.type = 'lowpass';
     filter.frequency.value = 800;
     filter.Q.value = 5;
-    
+
     oscillator.connect(filter);
     filter.connect(gainNode);
     gainNode.connect(audioCtx.destination);
@@ -683,20 +686,20 @@ function initAudio() {
 
 function updateChirp(progress, merged) {
     if (!audioCtx || !chirpEnabled) return;
-    
+
     if (merged) {
         // Dramatic sweep up and fade out
         oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.5);
         gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
         return;
     }
-    
+
     // progress: 1.0 (far apart) → 0.0 (about to merge)
     // Frequency: 35 Hz → 250 Hz (matches real LIGO inspiral chirp range)
     const closeness = 1 - progress;
     const freq = 35 + closeness * closeness * 215; // Quadratic sweep
     oscillator.frequency.value = freq;
-    
+
     // Volume: very quiet when far, louder as they approach
     // Pulsate at 2x the orbital frequency for that "wub wub" inspiral feel
     const baseVol = 0.02 + closeness * 0.08;
@@ -707,10 +710,10 @@ function updateChirp(progress, merged) {
 const soundBtn = document.getElementById('sound-btn');
 soundBtn.addEventListener('click', () => {
     if (!audioCtx) initAudio();
-    
+
     chirpEnabled = !chirpEnabled;
     soundBtn.textContent = chirpEnabled ? '🔊' : '🔇';
-    
+
     if (chirpEnabled) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         gainNode.gain.value = 0.02;
@@ -725,7 +728,7 @@ document.querySelectorAll('.tab-nav .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-nav .tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-        
+
         btn.classList.add('active');
         activeTab = btn.getAttribute('data-tab');
         document.getElementById(activeTab).classList.add('active');
@@ -806,7 +809,7 @@ function quantumLoop() {
         const mins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
         const secs = Math.floor((remainingMs % (1000 * 60)) / 1000);
         const pad = n => n.toString().padStart(2, '0');
-        
+
         qCountdownEl.textContent = merged ? "00:00:00:00" : `${pad(days)}:${pad(hours)}:${pad(mins)}:${pad(secs)}`;
 
         // Dynamic texts
@@ -823,7 +826,7 @@ function quantumLoop() {
         }
         let elapsedText = `${eMonths} months`;
         if (eDays > 0) elapsedText += ` and ${eDays} days`;
-        
+
         qElapsedEl.textContent = `SPOOKY ACTION AT A DISTANCE: ${elapsedText.toUpperCase()}.`;
 
         qCtx.fillStyle = '#010306';
@@ -859,12 +862,12 @@ function quantumLoop() {
             // Left Glow & Core
             drawQuantumGlow(lx, ly, 40, 'rgba(0, 243, 255, 0.6)');
             qCtx.fillStyle = '#fff';
-            qCtx.beginPath(); qCtx.arc(lx, ly, 10, 0, Math.PI*2); qCtx.fill();
+            qCtx.beginPath(); qCtx.arc(lx, ly, 10, 0, Math.PI * 2); qCtx.fill();
 
             // Right Glow & Core
             drawQuantumGlow(rx, ry, 40, 'rgba(255, 50, 150, 0.6)');
             qCtx.fillStyle = '#fff';
-            qCtx.beginPath(); qCtx.arc(rx, ry, 10, 0, Math.PI*2); qCtx.fill();
+            qCtx.beginPath(); qCtx.arc(rx, ry, 10, 0, Math.PI * 2); qCtx.fill();
 
             // Add some jitter to make them look like quantum states
             if (!isDragging) {
@@ -877,14 +880,14 @@ function quantumLoop() {
             // Collapsed Waveform
             drawQuantumGlow(cx, cy, 100, 'rgba(150, 50, 255, 0.8)');
             qCtx.fillStyle = '#fff';
-            qCtx.beginPath(); qCtx.arc(cx, cy, 20, 0, Math.PI*2); qCtx.fill();
-            
+            qCtx.beginPath(); qCtx.arc(cx, cy, 20, 0, Math.PI * 2); qCtx.fill();
+
             // Waveform rings
             const t = Date.now() / 500;
-            for(let i=1; i<=3; i++) {
+            for (let i = 1; i <= 3; i++) {
                 qCtx.beginPath();
-                qCtx.arc(cx, cy, 20 + i*40 + Math.sin(t+i)*10, 0, Math.PI*2);
-                qCtx.strokeStyle = `rgba(0, 243, 255, ${0.5/i})`;
+                qCtx.arc(cx, cy, 20 + i * 40 + Math.sin(t + i) * 10, 0, Math.PI * 2);
+                qCtx.strokeStyle = `rgba(0, 243, 255, ${0.5 / i})`;
                 qCtx.lineWidth = 2;
                 qCtx.stroke();
             }
@@ -919,10 +922,10 @@ settingsBtn.addEventListener('click', () => {
     const tzOffset = (new Date()).getTimezoneOffset() * 60000; // offset in milliseconds
     const localISOTime = (new Date(targetDate - tzOffset)).toISOString().slice(0, 16);
     datetimeInput.value = localISOTime;
-    
+
     myInitInput.value = savedMyInit;
     herInitInput.value = savedHerInit;
-    
+
     settingsModal.classList.add('active');
 });
 
@@ -941,19 +944,19 @@ saveDateBtn.addEventListener('click', () => {
         localStorage.setItem('orbitalTargetDate', targetDate);
         localStorage.setItem('orbitalStartDate', startDate);
     }
-    
+
     if (myInitInput.value.trim()) {
         savedMyInit = myInitInput.value.trim().toUpperCase();
         myInitialEl.textContent = savedMyInit;
         localStorage.setItem('myInitial', savedMyInit);
     }
-    
+
     if (herInitInput.value.trim()) {
         savedHerInit = herInitInput.value.trim().toUpperCase();
         herInitialEl.textContent = savedHerInit;
         localStorage.setItem('herInitial', savedHerInit);
     }
-    
+
     settingsModal.classList.remove('active');
 });
 
@@ -973,11 +976,11 @@ function initBlochSphere() {
 
     // Wireframe Sphere
     const geometry = new THREE.SphereGeometry(1.5, 32, 32);
-    const material = new THREE.MeshBasicMaterial({ 
-        color: 0x00f3ff, 
-        wireframe: true, 
-        transparent: true, 
-        opacity: 0.15 
+    const material = new THREE.MeshBasicMaterial({
+        color: 0x00f3ff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.15
     });
     sphere = new THREE.Mesh(geometry, material);
     scene.add(sphere);
@@ -998,7 +1001,7 @@ function initBlochSphere() {
     const pGeo = new THREE.BufferGeometry();
     const pMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.05, transparent: true });
     const pPos = new Float32Array(500 * 3);
-    for(let i=0; i<1500; i++) pPos[i] = (Math.random()-0.5)*0.1;
+    for (let i = 0; i < 1500; i++) pPos[i] = (Math.random() - 0.5) * 0.1;
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
     particles = new THREE.Points(pGeo, pMat);
     particles.visible = false;
@@ -1013,18 +1016,18 @@ const katexStateEl = document.getElementById('katex-state');
 measureBtn.addEventListener('click', () => {
     isMeasured = true;
     measureBtn.style.display = 'none';
-    
+
     // Snap to |Together> (South Pole)
     arrow.setDirection(new THREE.Vector3(0, -1, 0));
-    
+
     // Explosion effect
     particles.visible = true;
     const pos = particles.geometry.attributes.position.array;
-    for(let i=0; i<1500; i+=3) {
-        pos[i] = 0; pos[i+1] = -1.5; pos[i+2] = 0;
+    for (let i = 0; i < 1500; i += 3) {
+        pos[i] = 0; pos[i + 1] = -1.5; pos[i + 2] = 0;
     }
     particles.geometry.attributes.position.needsUpdate = true;
-    
+
     // Update math
     alphaValEl.textContent = "0.000";
     betaValEl.textContent = "1.000";
@@ -1037,10 +1040,10 @@ function updateBlochState(theta, phi) {
     if (isMeasured) {
         // Expand particles
         const pos = particles.geometry.attributes.position.array;
-        for(let i=0; i<1500; i+=3) {
-            pos[i] += (Math.random()-0.5)*0.2;
-            pos[i+1] += (Math.random()-0.5)*0.2;
-            pos[i+2] += (Math.random()-0.5)*0.2;
+        for (let i = 0; i < 1500; i += 3) {
+            pos[i] += (Math.random() - 0.5) * 0.2;
+            pos[i + 1] += (Math.random() - 0.5) * 0.2;
+            pos[i + 2] += (Math.random() - 0.5) * 0.2;
         }
         particles.geometry.attributes.position.needsUpdate = true;
         particles.material.opacity *= 0.92;
@@ -1055,15 +1058,15 @@ function updateBlochState(theta, phi) {
     arrow.setDirection(dir);
 
     // Calculate probabilities
-    const alphaSq = Math.cos(theta/2) ** 2;
-    const betaSq = Math.sin(theta/2) ** 2;
-    
+    const alphaSq = Math.cos(theta / 2) ** 2;
+    const betaSq = Math.sin(theta / 2) ** 2;
+
     alphaValEl.textContent = alphaSq.toFixed(3);
     betaValEl.textContent = betaSq.toFixed(3);
 
     // Update KaTeX
-    const alphaStr = Math.cos(theta/2).toFixed(2);
-    const betaStr = Math.sin(theta/2).toFixed(2);
+    const alphaStr = Math.cos(theta / 2).toFixed(2);
+    const betaStr = Math.sin(theta / 2).toFixed(2);
     const katexString = `|\\psi\\rangle = ${alphaStr}|\\text{Apart}\\rangle + e^{i\\phi} ${betaStr}|\\text{Together}\\rangle`;
     if (typeof katex !== 'undefined') katex.render(katexString, katexStateEl);
 }
@@ -1080,7 +1083,7 @@ function blochLoop() {
 
         const remainingMs = Math.max(0, targetDate - Date.now());
         const days = remainingMs / (1000 * 60 * 60 * 24);
-        
+
         if (days <= 1 && !isMeasured && remainingMs > 0) {
             measureBtn.style.display = 'block';
         } else if (remainingMs === 0 && !isMeasured) {
@@ -1090,10 +1093,10 @@ function blochLoop() {
         if (!isMeasured) {
             const progress = Math.min(1, Math.max(0, 1 - (remainingMs / TOTAL_MS)));
             const theta = progress * Math.PI;
-            const phi = (Date.now() / 1000) * 2; 
+            const phi = (Date.now() / 1000) * 2;
             updateBlochState(theta, phi);
         } else {
-            updateBlochState(Math.PI, 0); 
+            updateBlochState(Math.PI, 0);
         }
 
         sphere.rotation.y += 0.002;
@@ -1106,7 +1109,7 @@ function blochLoop() {
 requestAnimationFrame(blochLoop);
 
 window.addEventListener('resize', () => {
-    if(camera && renderer) {
+    if (camera && renderer) {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -1128,37 +1131,37 @@ function drawBlackHole() {
     if (activeTab !== 'capsule') return;
     const cw = capsuleCanvas.width;
     const ch = capsuleCanvas.height;
-    
+
     capsuleCtx.fillStyle = '#010306';
     capsuleCtx.fillRect(0, 0, cw, ch);
-    
+
     const cx = cw / 2;
     const cy = ch / 2;
-    
+
     capsuleAngle += 0.02;
-    
+
     // Accretion disk
     capsuleCtx.save();
     capsuleCtx.translate(cx, cy);
     capsuleCtx.rotate(capsuleAngle);
-    
+
     for (let i = 0; i < 50; i++) {
         const r = 80 + Math.random() * 60;
         const a = Math.random() * Math.PI * 2;
         capsuleCtx.fillStyle = `rgba(255, 100, 50, ${Math.random() * 0.3})`;
         capsuleCtx.beginPath();
-        capsuleCtx.arc(Math.cos(a)*r, Math.sin(a)*r, Math.random()*2, 0, Math.PI*2);
+        capsuleCtx.arc(Math.cos(a) * r, Math.sin(a) * r, Math.random() * 2, 0, Math.PI * 2);
         capsuleCtx.fill();
     }
-    
+
     capsuleCtx.restore();
-    
+
     // Event Horizon (Black center)
     capsuleCtx.fillStyle = 'black';
     capsuleCtx.beginPath();
     capsuleCtx.arc(cx, cy, 75, 0, Math.PI * 2);
     capsuleCtx.fill();
-    
+
     // Glow around event horizon
     capsuleCtx.shadowBlur = 40;
     capsuleCtx.shadowColor = 'rgba(255, 50, 150, 0.8)';
@@ -1168,7 +1171,7 @@ function drawBlackHole() {
     capsuleCtx.arc(cx, cy, 75, 0, Math.PI * 2);
     capsuleCtx.stroke();
     capsuleCtx.shadowBlur = 0; // reset
-    
+
     requestAnimationFrame(drawBlackHole);
 }
 
@@ -1195,7 +1198,7 @@ function dftComplex(points) {
         }
         re = re / N;
         im = im / N;
-        X.push({ freq: k, amp: Math.sqrt(re*re + im*im), phase: Math.atan2(im, re) });
+        X.push({ freq: k, amp: Math.sqrt(re * re + im * im), phase: Math.atan2(im, re) });
     }
     return X.sort((a, b) => b.amp - a.amp);
 }
@@ -1205,8 +1208,8 @@ function generatePath(nameText) {
     // 1. Heart Path
     for (let t = 0; t < Math.PI * 2; t += 0.05) {
         const x = 16 * Math.pow(Math.sin(t), 3);
-        const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
-        points.push({ x: x * 10, y: y * 10 - 80 }); 
+        const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        points.push({ x: x * 10, y: y * 10 - 80 });
     }
 
     // 2. Name Path via Offscreen Canvas and TSP approximation
@@ -1244,7 +1247,7 @@ function generatePath(nameText) {
                 for (let i = 0; i < textPts.length; i++) {
                     const dx = textPts[i].x - curr.x;
                     const dy = textPts[i].y - curr.y;
-                    const dist = dx*dx + dy*dy;
+                    const dist = dx * dx + dy * dy;
                     if (dist < minDist) {
                         minDist = dist;
                         nearestIdx = i;
@@ -1260,29 +1263,29 @@ function generatePath(nameText) {
 }
 
 const fourierBtn = document.getElementById('generate-fourier-btn');
-if(fourierBtn) {
+if (fourierBtn) {
     fourierBtn.addEventListener('click', () => {
         const name = document.getElementById('her-name-input').value;
         const path = generatePath(name);
-        
+
         // Temporarily change button text while computing DFT
         const originalText = fourierBtn.textContent;
         fourierBtn.textContent = "Computing DFT...";
         fourierBtn.style.opacity = '0.5';
-        
+
         // Use setTimeout to allow UI to render "Computing..." before heavy JS locks the thread
         setTimeout(() => {
             fourierY = dftComplex(path);
-            
+
             const slider = document.getElementById('fourier-slider');
             slider.max = fourierY.length;
             slider.value = Math.min(362, fourierY.length);
             fourierMaxTerms = parseInt(slider.value);
             document.getElementById('fourier-terms-val').textContent = fourierMaxTerms;
-            
+
             fourierTime = 0;
             fourierPath = [];
-            
+
             fourierBtn.textContent = originalText;
             fourierBtn.style.opacity = '1';
         }, 50);
@@ -1290,7 +1293,7 @@ if(fourierBtn) {
 }
 
 const fourierSlider = document.getElementById('fourier-slider');
-if(fourierSlider) {
+if (fourierSlider) {
     fourierSlider.addEventListener('input', (e) => {
         fourierMaxTerms = parseInt(e.target.value);
         document.getElementById('fourier-terms-val').textContent = fourierMaxTerms;
@@ -1301,7 +1304,7 @@ if(fourierSlider) {
 
 function epicycle(x, y, rotation, fourier) {
     for (let i = 0; i < fourierMaxTerms; i++) {
-        if(!fourier[i]) continue;
+        if (!fourier[i]) continue;
         let prevx = x;
         let prevy = y;
         let freq = fourier[i].freq;
@@ -1329,7 +1332,7 @@ function fourierLoop() {
     if (activeTab === 'epicycle') {
         fCtx.fillStyle = '#010306';
         fCtx.fillRect(0, 0, width, height);
-        
+
         // Draw Stars
         fCtx.fillStyle = '#ffffff';
         stars.forEach(star => {
@@ -1357,7 +1360,7 @@ function fourierLoop() {
             fCtx.strokeStyle = '#ff3296';
             fCtx.lineWidth = 2.5;
             fCtx.stroke();
-            
+
             // Glow effect on trace
             fCtx.shadowBlur = 10;
             fCtx.shadowColor = '#ff3296';
@@ -1382,12 +1385,12 @@ requestAnimationFrame(fourierLoop);
 
 // Auto-generate the heart initially
 setTimeout(() => {
-    if(fourierBtn) fourierBtn.click();
+    if (fourierBtn) fourierBtn.click();
 }, 1000);
 
 // --- SERVICE WORKER REGISTRATION ---
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/sw.js').catch(() => { });
 }
 
 // --- MILESTONE NOTIFICATIONS ---
@@ -1397,17 +1400,17 @@ let notifiedMilestones = JSON.parse(localStorage.getItem('notifiedMilestones') |
 function checkMilestones() {
     const rem = Math.max(0, targetDate - Date.now());
     const daysLeft = Math.floor(rem / (1000 * 60 * 60 * 24));
-    
+
     MILESTONES.forEach(m => {
         if (daysLeft === m && !notifiedMilestones.includes(m)) {
             notifiedMilestones.push(m);
             localStorage.setItem('notifiedMilestones', JSON.stringify(notifiedMilestones));
-            
+
             let msg;
             if (m === 0) msg = "🎉 Today is the day! The orbits have merged.";
             else if (m === 1) msg = "💫 1 day remaining. The gravitational pull is immense.";
             else msg = `🔔 ${m} days remaining until orbital merger.`;
-            
+
             if (Notification.permission === 'granted') {
                 new Notification('Orbital Decay', { body: msg, icon: '/icon-192.png' });
             }
