@@ -211,11 +211,16 @@ const firebaseConfig = {
     databaseURL: "https://pokomeetsoon-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
 
-// Initialize Firebase
-if (typeof firebase !== 'undefined') {
-    firebase.initializeApp(firebaseConfig);
+// Initialize Firebase safely
+let database = null;
+try {
+    if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+    }
+} catch (e) {
+    console.error("Firebase Init Error:", e);
 }
-const database = typeof firebase !== 'undefined' ? firebase.database() : null;
 
 // --- COMPASS & HEARTBEAT (Home Screen) ---
 const compassArrow = document.getElementById('compass-arrow');
@@ -1127,7 +1132,10 @@ const capsuleCtx = capsuleCanvas.getContext('2d');
 let capsuleAngle = 0;
 
 function drawBlackHole() {
-    if (activeTab !== 'capsule') return;
+    if (activeTab !== 'capsule') {
+        requestAnimationFrame(drawBlackHole);
+        return;
+    }
     const cw = capsuleCanvas.width;
     const ch = capsuleCanvas.height;
 
