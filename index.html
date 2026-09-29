@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Orbital Decay</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#010306">
+</head>
+<body>
+    <!-- HOME SCREEN -->
+    <div id="home-screen">
+        <canvas id="homeCanvas"></canvas>
+        <div class="home-content">
+            <div class="home-top">
+                <div class="home-date" id="home-date">Sun 29</div>
+                <div class="home-together" id="home-together">❤️ 130 days together</div>
+                <div style="font-size: 0.55rem; color: rgba(0, 243, 255, 0.5); margin-top: 8px; letter-spacing: 2px; text-transform: uppercase; font-family: 'SF Mono', 'Courier New', monospace;">Star Map: Raigarh, CG (May 22)</div>
+            </div>
+            <div class="home-timer" id="home-timer">00:00:00:00</div>
+            <div class="home-bottom">
+                <div class="home-stats">
+                    <div class="home-stat">
+                        <div class="home-stat-label">Together for</div>
+                        <div class="home-stat-value" id="home-elapsed">0:00:00:00</div>
+                        <div class="home-stat-unit">DAY &nbsp; HR &nbsp; MIN &nbsp; SEC</div>
+                    </div>
+                    <div class="home-stat">
+                        <div class="home-stat-label">Our distance</div>
+                        <div class="home-stat-value" id="home-distance">Locating...</div>
+                    </div>
+                </div>
+                <div class="distance-widget home-widget">
+                    <div class="distance-visual">
+                        <div class="initial-circle" id="home-my-initial">Y</div>
+                        <div class="dotted-line">
+                            <button id="heartbeat-btn" class="heart-icon">❤️</button>
+                        </div>
+                        <div class="initial-circle" id="home-her-initial">H</div>
+                        <div id="compass-arrow" title="Points to her">➤</div>
+                    </div>
+                </div>
+                <button id="enter-btn">Explore ↗</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP (hidden until enter) -->
+    <div id="main-app" class="hidden">
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="orbital">Orbit</button>
+            <button class="tab-btn" data-tab="quantum">Entangle</button>
+            <button class="tab-btn" data-tab="bloch">Bloch</button>
+            <button class="tab-btn" data-tab="epicycle">Fourier</button>
+            <button class="tab-btn" data-tab="capsule">Capsule</button>
+        </div>
+
+    <!-- TAB 1: Orbital Decay -->
+    <div id="orbital" class="tab-pane active">
+        <canvas id="spaceCanvas"></canvas>
+        <div id="ui-container">
+            <div class="hud-box">
+                <h2>System Telemetry</h2>
+
+                <div class="hud-line">
+                    <span class="label">T-Minus</span>
+                    <span id="countdown" class="value" style="color: var(--pink);">--:--:--:--</span>
+                </div>
+
+                <div class="separator"></div>
+
+                <div class="hud-line">
+                    <span class="label">Distance (r)</span>
+                    <span id="distanceVal" class="value">0.00 Mm</span>
+                </div>
+                <div class="hud-line">
+                    <span class="label">Velocity (v)</span>
+                    <span id="velocityVal" class="value">0.00 km/s</span>
+                </div>
+                <div class="hud-line">
+                    <span class="label">Force (F)</span>
+                    <span id="forceVal" class="value">0.00 N</span>
+                </div>
+
+                <div class="separator"></div>
+
+                <div class="distance-widget">
+                    <div class="distance-label">Our distance: <span id="earthDisplacementVal">Locating...</span></div>
+                    <div class="distance-visual">
+                        <div class="initial-circle" id="my-initial">Y</div>
+                        <div class="dotted-line">
+                            <span class="heart-icon">❤️</span>
+                        </div>
+                        <div class="initial-circle" id="her-initial">H</div>
+                    </div>
+                </div>
+
+                <div class="formula">F = G(m₁m₂)/r²</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Quantum Entanglement -->
+    <div id="quantum" class="tab-pane">
+        <canvas id="quantumCanvas"></canvas>
+        <div id="quantum-ui">
+            <div class="quantum-hud">
+                <div id="quantum-countdown">00:00:00:00</div>
+                <div id="quantum-elapsed" class="quantum-subtext">Spooky action at a distance</div>
+                <div id="quantum-remaining" class="quantum-subtext">Distance remaining</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: Bloch Sphere -->
+    <div id="bloch" class="tab-pane">
+        <div id="three-container"></div>
+        <div id="bloch-ui" class="hud-box">
+            <h2>Bloch Sphere</h2>
+            <div id="katex-state"></div>
+            <div class="separator"></div>
+            <div class="hud-line">
+                <span class="label">|α|² (Apart)</span>
+                <span id="alphaVal" class="value">1.000</span>
+            </div>
+            <div class="hud-line">
+                <span class="label">|β|² (Together)</span>
+                <span id="betaVal" class="value">0.000</span>
+            </div>
+            <button id="measure-btn">Measure State</button>
+        </div>
+    </div>
+
+    <!-- TAB 4: Fourier Epicycles -->
+    <div id="epicycle" class="tab-pane">
+        <canvas id="fourierCanvas"></canvas>
+        <div id="fourier-ui" class="hud-box">
+            <h2>Fourier Epicycles</h2>
+            <div class="input-group">
+                <label>Her Name</label>
+                <input type="text" id="her-name-input" placeholder="Enter name..." value="Koshi">
+            </div>
+            <button id="generate-fourier-btn" class="tab-btn active" style="margin-top: 12px; width: 100%;">Generate</button>
+            <div class="separator"></div>
+            <div class="input-group">
+                <label>Fourier Terms: <span id="fourier-terms-val">362</span></label>
+                <input type="range" id="fourier-slider" min="1" max="1000" value="362">
+            </div>
+        </div>
+    </div>
+    <!-- TAB 5: Time Capsule -->
+    <div id="capsule" class="tab-pane">
+        <canvas id="capsuleCanvas"></canvas>
+        <div id="capsule-ui" class="hud-box" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; text-align: center;">
+            <h2>Event Horizon Time Capsule</h2>
+            
+            <div id="capsule-locked-view" class="hidden">
+                <div style="font-size: 2rem; margin-bottom: 10px;">🕳️</div>
+                <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 15px; letter-spacing: 1px;">
+                    A message is locked behind the event horizon.<br>It will emerge at T-Minus 0.
+                </div>
+            </div>
+            
+            <div id="capsule-compose-view">
+                <textarea id="capsule-input" placeholder="Write a message to be locked until you meet..." style="width: 100%; height: 120px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: white; border-radius: 8px; padding: 10px; font-family: inherit; resize: none; outline: none;"></textarea>
+                <button id="lock-capsule-btn" class="tab-btn active" style="margin-top: 15px; width: 100%; border: 1px solid rgba(255, 50, 150, 0.5); color: var(--pink); background: rgba(255, 50, 150, 0.1);">Send to the Black Hole</button>
+            </div>
+            
+            <div id="capsule-revealed-view" class="hidden">
+                <div style="font-size: 2rem; margin-bottom: 10px;">✨</div>
+                <div id="capsule-message" style="font-size: 1rem; color: white; padding: 20px; background: rgba(0,243,255,0.1); border-radius: 8px; border: 1px solid var(--border); font-style: italic; white-space: pre-wrap;"></div>
+            </div>
+        </div>
+    </div>
+    </div><!-- /main-app -->
+
+    <!-- Controls -->
+    <button id="sound-btn" title="LIGO Chirp">🔇</button>
+    <button id="settings-btn" title="Settings">⚙️</button>
+
+    <div id="settings-modal" class="modal">
+        <div class="modal-content hud-box">
+            <h2>Settings</h2>
+            <div class="input-group">
+                <label for="target-datetime">Meeting Date & Time</label>
+                <input type="datetime-local" id="target-datetime">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group" style="flex: 1;">
+                    <label for="my-init-input">Your Initial</label>
+                    <input type="text" id="my-init-input" maxlength="1" style="text-align: center;">
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label for="her-init-input">Her Initial</label>
+                    <input type="text" id="her-init-input" maxlength="1" style="text-align: center;">
+                </div>
+            </div>
+            <button id="save-date-btn" class="tab-btn active" style="margin-top: 16px; width: 100%;">Save</button>
+            <button id="close-modal-btn" class="tab-btn" style="margin-top: 8px; width: 100%; border: 1px solid rgba(255,255,255,0.1);">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

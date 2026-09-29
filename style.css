@@ -1,0 +1,645 @@
+:root {
+    --accent: #00f3ff;
+    --accent-glow: rgba(0, 243, 255, 0.3);
+    --pink: #ff3296;
+    --bg: #010306;
+    --card: rgba(4, 13, 24, 0.85);
+    --border: rgba(0, 243, 255, 0.15);
+    --text: rgba(255, 255, 255, 0.75);
+    --text-dim: rgba(255, 255, 255, 0.4);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body, html {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    overflow: hidden;
+    font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    color: white;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+/* ── Tab Navigation ── */
+.tab-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 10;
+    display: flex;
+    gap: 2px;
+    padding: 8px 8px 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 10px 6px 8px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+}
+
+.tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+/* ── Tab Panes ── */
+.tab-pane {
+    display: none;
+    width: 100%; height: 100%;
+    position: relative;
+}
+.tab-pane.active { display: block; }
+
+/* ── Canvases ── */
+#spaceCanvas, #quantumCanvas, #three-container, #fourierCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+}
+
+/* ── Glassmorphism Card ── */
+.hud-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    position: relative;
+    overflow: hidden;
+}
+
+.hud-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+}
+
+.hud-box h2 {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    text-align: center;
+    opacity: 0.7;
+}
+
+/* ── Telemetry HUD (Tab 1) ── */
+#ui-container {
+    position: absolute;
+    bottom: 20px;
+    left: 12px; right: 12px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.separator {
+    height: 1px;
+    background: var(--border);
+    margin: 10px 0;
+}
+
+.hud-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 0.78rem;
+}
+
+.hud-line .label {
+    color: var(--text-dim);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.hud-line .value {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-family: 'SF Mono', 'Courier New', monospace;
+    color: var(--accent);
+    font-size: 0.8rem;
+}
+
+.formula {
+    text-align: center;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    margin-top: 12px;
+    font-family: 'SF Mono', 'Courier New', monospace;
+}
+
+/* ── Distance Widget ── */
+.distance-widget {
+    margin-top: 10px;
+    padding: 14px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 14px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.distance-label {
+    font-size: 0.72rem;
+    color: var(--text);
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.distance-label span {
+    color: white;
+    font-weight: 700;
+}
+
+.distance-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+}
+
+.initial-circle {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+}
+
+.dotted-line {
+    flex: 1;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(255,255,255,0.25) 50%, transparent 50%);
+    background-size: 6px 1px;
+    margin: 0 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 140px;
+}
+
+.heart-icon {
+    font-size: 1.1rem;
+    background: var(--card);
+    padding: 0 6px;
+    line-height: 1;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s ease, filter 0.2s ease;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.heart-icon:active {
+    transform: scale(0.8);
+    filter: brightness(1.5);
+}
+.heart-pulse {
+    animation: pulseHeart 0.8s ease-out;
+}
+@keyframes pulseHeart {
+    0% { transform: scale(1); filter: drop-shadow(0 0 0px var(--pink)); }
+    50% { transform: scale(1.4); filter: drop-shadow(0 0 15px var(--pink)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 0px var(--pink)); }
+}
+
+#compass-arrow {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    margin-top: -10px;
+    font-size: 1.2rem;
+    color: var(--accent);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.5s ease;
+    pointer-events: none;
+    text-shadow: 0 0 8px var(--accent);
+}
+.compass-active #compass-arrow {
+    opacity: 0.8;
+}
+
+/* ── Quantum Entanglement (Tab 2) ── */
+#quantum-ui {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    pointer-events: none;
+    text-align: center;
+    width: 90%;
+}
+
+.quantum-hud {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+#quantum-countdown {
+    font-size: 2.2rem;
+    font-weight: 200;
+    color: #fff;
+    text-shadow: 0 0 30px rgba(255,255,255,0.4);
+    letter-spacing: 4px;
+    font-family: 'SF Mono', 'Courier New', monospace;
+}
+
+.quantum-subtext {
+    font-size: 0.65rem;
+    color: var(--text);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+/* ── Bloch Sphere (Tab 3) ── */
+#bloch-ui {
+    position: absolute !important;
+    bottom: 20px !important;
+    left: 12px !important; right: 12px !important;
+    top: auto !important;
+    z-index: 2;
+    width: auto !important;
+}
+
+#katex-state {
+    font-size: 0.9rem !important;
+    margin: 12px 0 !important;
+    text-align: center;
+    overflow-x: auto;
+}
+
+#measure-btn {
+    margin-top: 14px;
+    width: 100%;
+    display: none;
+    background: rgba(255, 50, 150, 0.15);
+    color: var(--pink);
+    border: 1px solid var(--pink);
+    border-radius: 12px;
+    padding: 14px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#measure-btn:active {
+    transform: scale(0.97);
+}
+
+/* ── Fourier Epicycles (Tab 4) ── */
+#fourier-ui {
+    position: absolute !important;
+    bottom: 20px !important;
+    left: 12px !important; right: 12px !important;
+    top: auto !important;
+    z-index: 2;
+    width: auto !important;
+}
+
+/* ── Settings ── */
+#settings-btn {
+    position: fixed;
+    bottom: 20px; right: 16px;
+    z-index: 10;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: white;
+    font-size: 1rem;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+#settings-btn:active {
+    transform: scale(0.9);
+}
+
+#sound-btn {
+    position: fixed;
+    bottom: 20px; right: 64px;
+    z-index: 10;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: white;
+    font-size: 1rem;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+#sound-btn:active {
+    transform: scale(0.9);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 20;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.modal.active {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    width: calc(100% - 32px);
+    max-width: 340px;
+    pointer-events: auto;
+}
+
+/* ── Form Inputs ── */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.input-group label {
+    font-size: 0.7rem;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.input-group input[type="text"],
+.input-group input[type="datetime-local"] {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    color: white;
+    padding: 12px 14px;
+    font-family: 'SF Mono', 'Courier New', monospace;
+    border-radius: 10px;
+    outline: none;
+    font-size: 0.85rem;
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+    border-color: var(--accent);
+}
+
+.input-group input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    outline: none;
+    margin-top: 4px;
+}
+
+.input-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* ── Buttons (in modals / HUDs) ── */
+.hud-box .tab-btn,
+.modal-content .tab-btn {
+    border-radius: 10px;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.hud-box .tab-btn:active,
+.modal-content .tab-btn:active {
+    transform: scale(0.97);
+}
+
+.hud-box .tab-btn.active,
+.modal-content .tab-btn.active {
+    background: rgba(0, 243, 255, 0.15);
+    color: var(--accent);
+}
+
+/* ── Large screen tweaks ── */
+@media (min-width: 600px) {
+    .tab-btn { font-size: 0.8rem; padding: 10px 20px; }
+    #quantum-countdown { font-size: 3.5rem; }
+    .quantum-subtext { font-size: 0.8rem; }
+    #ui-container { left: 30px; right: auto; width: 360px; bottom: 30px; }
+    #bloch-ui, #fourier-ui { left: 30px !important; right: auto !important; width: 340px !important; bottom: 30px !important; }
+    .hud-line { font-size: 0.85rem; }
+    .hud-line .label { font-size: 0.75rem; }
+    .home-timer { font-size: 4.5rem !important; }
+}
+
+/* ── Utility ── */
+.hidden { display: none !important; }
+
+#main-app {
+    width: 100%; height: 100%;
+    position: relative;
+}
+
+/* ── Home Screen ── */
+#home-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+#home-screen.fade-out {
+    opacity: 0;
+    transform: scale(1.05);
+    pointer-events: none;
+}
+
+#homeCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+}
+
+.home-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    width: 100%;
+    padding: 60px 24px 40px;
+}
+
+.home-top {
+    text-align: center;
+}
+
+.home-date {
+    font-size: 0.8rem;
+    color: var(--text);
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.home-together {
+    font-size: 0.75rem;
+    color: var(--text);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+}
+
+.home-timer {
+    font-size: 3.2rem;
+    font-weight: 200;
+    color: white;
+    letter-spacing: 3px;
+    font-family: 'SF Mono', 'Courier New', monospace;
+    text-shadow: 0 0 40px rgba(255,255,255,0.2);
+    text-align: center;
+}
+
+.home-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 320px;
+}
+
+.home-stats {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    width: 100%;
+}
+
+.home-stat {
+    text-align: center;
+}
+
+.home-stat-label {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.home-stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    font-family: 'SF Mono', 'Courier New', monospace;
+}
+
+.home-stat-unit {
+    font-size: 0.5rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+.home-widget {
+    width: 100%;
+    max-width: 240px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 12px 20px;
+    margin: 0;
+}
+
+#enter-btn {
+    background: rgba(0, 243, 255, 0.1);
+    border: 1px solid rgba(0, 243, 255, 0.25);
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 14px 40px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+#enter-btn:active {
+    transform: scale(0.95);
+    background: rgba(0, 243, 255, 0.2);
+}
