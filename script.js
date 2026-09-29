@@ -197,6 +197,24 @@ enterBtn.addEventListener('click', () => {
 
 window.addEventListener('resize', resizeHome);
 
+// --- FIREBASE SETUP ---
+// TODO: Replace this entire config object with the one from your Firebase Project settings
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase
+if (typeof firebase !== 'undefined') {
+    firebase.initializeApp(firebaseConfig);
+}
+const database = typeof firebase !== 'undefined' ? firebase.database() : null;
+
 // --- COMPASS & HEARTBEAT (Home Screen) ---
 const compassArrow = document.getElementById('compass-arrow');
 const heartbeatBtn = document.getElementById('heartbeat-btn');
@@ -206,9 +224,24 @@ let myLat = null, myLon = null, partnerLat = null, partnerLon = null;
 let lastPartnerHeartbeat = 0;
 let sendingHeartbeat = false;
 
+function sendFirebaseHeartbeat() {
+    if (database && myLat !== null) {
+        database.ref('users/' + CLIENT_ID).update({
+            heartbeat: Date.now(),
+            timestamp: Date.now()
+        });
+    }
+}
+
 // Heartbeat interaction
-heartbeatBtn.addEventListener('mousedown', () => sendingHeartbeat = true);
-heartbeatBtn.addEventListener('touchstart', () => sendingHeartbeat = true);
+heartbeatBtn.addEventListener('mousedown', () => {
+    sendingHeartbeat = true;
+    sendFirebaseHeartbeat();
+});
+heartbeatBtn.addEventListener('touchstart', () => {
+    sendingHeartbeat = true;
+    sendFirebaseHeartbeat();
+});
 window.addEventListener('mouseup', () => sendingHeartbeat = false);
 window.addEventListener('touchend', () => sendingHeartbeat = false);
 
@@ -258,6 +291,13 @@ lockCapsuleBtn.addEventListener('click', () => {
         myCapsule = capsuleInput.value.trim();
         localStorage.setItem('myCapsule', myCapsule);
         updateCapsuleView();
+        
+        if (database && myLat !== null) {
+            database.ref('users/' + CLIENT_ID).update({
+                capsule: myCapsule,
+                timestamp: Date.now()
+            });
+        }
     }
 });
 
@@ -378,18 +418,15 @@ if ("geolocation" in navigator) {
         myLat = latitude;
         myLon = longitude;
 
-        // Post our location to the server
-        fetch('/api/location', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id: CLIENT_ID, 
-                lat: latitude, 
+        // Push to Firebase instantly
+        if (database) {
+            database.ref('users/' + CLIENT_ID).update({
+                lat: latitude,
                 lon: longitude,
-                heartbeat: sendingHeartbeat ? Date.now() : null,
-                capsule: myCapsule
-            })
-        }).catch(err => console.error("Error posting location:", err));
+                capsule: myCapsule,
+                timestamp: Date.now()
+            });
+        }
     }, (err) => {
         earthDistanceStr = "GPS Error: " + err.message;
     }, {
@@ -401,62 +438,60 @@ if ("geolocation" in navigator) {
     earthDistanceStr = "GPS Not Supported";
 }
 
-// Poll server for other locations
-setInterval(() => {
-    fetch('/api/locations')
-        .then(res => res.json())
-        .then(data => {
-            const users = Object.keys(data);
-            if (users.length >= 2) {
-                // Find our user and the most recent other user
-                let myLoc = data[CLIENT_ID];
-                let partnerLoc = null;
-                for (let id of users) {
-                    if (id !== CLIENT_ID) {
-                        partnerLoc = data[id];
-                        break; // Just pick the first other user for now
-                    }
+// --- FIREBASE REALTIME LISTENER (Replaces 2-second polling) ---
+if (database) {
+    database.ref('users').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        const users = Object.keys(data);
+        if (users.length >= 2) {
+            let myLoc = data[CLIENT_ID];
+            let partnerLoc = null;
+
+            for (let id of users) {
+                if (id !== CLIENT_ID && (Date.now() - data[id].timestamp < 10 * 60 * 1000)) {
+                    partnerLoc = data[id];
+                    break;
                 }
-                
-                if (myLoc && partnerLoc) {
-                    partnerLat = partnerLoc.lat;
-                    partnerLon = partnerLoc.lon;
-
-                    // Handle Partner Capsule
-                    if (partnerLoc.capsule && activeTab === 'capsule') {
-                        // Display partner's capsule in the revealed view instead of ours
-                        const remainingMs = Math.max(0, parseInt(localStorage.getItem('orbitalTargetDate')) || Date.now() - Date.now());
-                        if (remainingMs <= 0) {
-                            capsuleMessageDisplay.textContent = partnerLoc.capsule;
-                        }
-                    }
-
-                    // Handle Partner Heartbeat
-                    if (partnerLoc.heartbeat) {
-                        if (partnerLoc.heartbeat > lastPartnerHeartbeat && (Date.now() - partnerLoc.heartbeat < 3000)) {
-                            // Valid recent heartbeat
-                            heartbeatBtn.classList.add('heart-pulse');
-                            if (navigator.vibrate) navigator.vibrate([100, 100, 100]);
-                        }
-                        lastPartnerHeartbeat = partnerLoc.heartbeat;
-                    } else {
-                        heartbeatBtn.classList.remove('heart-pulse');
-                    }
-
-                    const distKm = calculateHaversine(myLoc.lat, myLoc.lon, partnerLoc.lat, partnerLoc.lon);
-                    const distMi = distKm * 0.621371;
-                    if (distMi < 0.1) {
-                        earthDistanceStr = "0 mi (MERGED)";
-                    } else {
-                        earthDistanceStr = distMi.toLocaleString(undefined, {maximumFractionDigits: 0}) + " mi";
-                    }
-                }
-            } else if (users.length === 1 && users[0] === CLIENT_ID) {
-                earthDistanceStr = "Waiting for partner...";
             }
-        })
-        .catch(err => console.error("Error polling locations:", err));
-}, 2000);
+            
+            if (myLoc && partnerLoc) {
+                partnerLat = partnerLoc.lat;
+                partnerLon = partnerLoc.lon;
+
+                // Handle Partner Capsule
+                if (partnerLoc.capsule && activeTab === 'capsule') {
+                    const remainingMs = Math.max(0, parseInt(localStorage.getItem('orbitalTargetDate')) || Date.now() - Date.now());
+                    if (remainingMs <= 0) {
+                        capsuleMessageDisplay.textContent = partnerLoc.capsule;
+                    }
+                }
+
+                // Handle Partner Heartbeat
+                if (partnerLoc.heartbeat) {
+                    if (partnerLoc.heartbeat > lastPartnerHeartbeat && (Date.now() - partnerLoc.heartbeat < 3000)) {
+                        heartbeatBtn.classList.add('heart-pulse');
+                        if (navigator.vibrate) navigator.vibrate([100, 100, 100]);
+                    }
+                    lastPartnerHeartbeat = partnerLoc.heartbeat;
+                } else {
+                    heartbeatBtn.classList.remove('heart-pulse');
+                }
+
+                const distKm = calculateHaversine(myLoc.lat, myLoc.lon, partnerLoc.lat, partnerLoc.lon);
+                const distMi = distKm * 0.621371;
+                if (distMi < 0.1) {
+                    earthDistanceStr = "0 mi (MERGED)";
+                } else {
+                    earthDistanceStr = distMi.toLocaleString(undefined, {maximumFractionDigits: 0}) + " mi";
+                }
+            }
+        } else if (users.length === 1 && users[0] === CLIENT_ID) {
+            earthDistanceStr = "Waiting for partner...";
+        }
+    });
+}
 
 function drawGlow(x, y, radius, innerColor, outerColor) {
     const gradient = ctx.createRadialGradient(x, y, radius * 0.1, x, y, radius * 2);
