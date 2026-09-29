@@ -920,8 +920,8 @@ const myInitialEl = document.getElementById('my-initial');
 const herInitialEl = document.getElementById('her-initial');
 
 // Load Initials from local storage
-let savedMyInit = localStorage.getItem('myInitial') || 'Y';
-let savedHerInit = localStorage.getItem('herInitial') || 'H';
+let savedMyInit = localStorage.getItem('myInitial') || 'P';
+let savedHerInit = localStorage.getItem('herInitial') || 'K';
 myInitialEl.textContent = savedMyInit;
 herInitialEl.textContent = savedHerInit;
 
