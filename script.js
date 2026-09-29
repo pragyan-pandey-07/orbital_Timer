@@ -132,9 +132,9 @@ function drawHomeStars() {
     homeCtx.globalAlpha = 1;
 }
 
+// --- HOME SCREEN ANIMATION LOOP ---
+// This loop always keeps running (even after transition) so star canvas stays alive
 function updateHomeScreen() {
-    if (homeScreen.classList.contains('fade-out')) return;
-
     drawHomeStars();
 
     // Date display
@@ -156,8 +156,8 @@ function updateHomeScreen() {
     homeElapsedEl.textContent = eDays + ':' + pad(eHrs) + ':' + pad(eMins) + ':' + pad(eSecs);
 
     // Load saved initials
-    const myI = localStorage.getItem('myInitial') || 'Y';
-    const herI = localStorage.getItem('herInitial') || 'H';
+    const myI = localStorage.getItem('myInitial') || 'P';
+    const herI = localStorage.getItem('herInitial') || 'K';
     homeMyInitEl.textContent = myI;
     homeHerInitEl.textContent = herI;
 
@@ -165,7 +165,7 @@ function updateHomeScreen() {
 }
 requestAnimationFrame(updateHomeScreen);
 
-// Countdown on home uses the same target
+// --- HOME SCREEN COUNTDOWN (ticks every second) ---
 function updateHomeCountdown() {
     const tgt = parseInt(localStorage.getItem('orbitalTargetDate')) || (Date.now() + 22 * 24 * 60 * 60 * 1000);
     const rem = Math.max(0, tgt - Date.now());
@@ -177,18 +177,19 @@ function updateHomeCountdown() {
     homeTimerEl.textContent = pad(d) + ':' + pad(h) + ':' + pad(m) + ':' + pad(s);
 }
 setInterval(updateHomeCountdown, 1000);
-updateHomeCountdown();
+updateHomeCountdown(); // Run immediately so it shows a real value, not 00:00:00:00
 
-// GPS distance on home screen (shares earthDistanceStr from main app later)
+// GPS distance on home screen
 setInterval(() => {
     if (typeof earthDistanceStr !== 'undefined') {
         homeDistanceEl.textContent = earthDistanceStr;
     }
 }, 2000);
 
-// Enter button → transition to main app
+// --- ENTER BUTTON → TRANSITION ---
 enterBtn.addEventListener('click', () => {
-    homeScreen.classList.add('fade-out');
+    homeScreen.style.transition = 'opacity 0.6s ease';
+    homeScreen.style.opacity = '0';
     setTimeout(() => {
         homeScreen.style.display = 'none';
         mainApp.classList.remove('hidden');
