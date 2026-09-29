@@ -340,6 +340,8 @@ const qCanvas = document.getElementById('quantumCanvas');
 const qCtx = qCanvas.getContext('2d');
 const fCanvas = document.getElementById('fourierCanvas');
 const fCtx = fCanvas.getContext('2d');
+const capsuleCanvas = document.getElementById('capsuleCanvas');
+const capsuleCtx = capsuleCanvas.getContext('2d');
 
 let width, height;
 function resize() {
@@ -1129,8 +1131,6 @@ let fourierPath = [];
 let fourierMaxTerms = 362;
 
 // --- CAPSULE BLACK HOLE LOGIC ---
-const capsuleCanvas = document.getElementById('capsuleCanvas');
-const capsuleCtx = capsuleCanvas.getContext('2d');
 let capsuleAngle = 0;
 
 function drawBlackHole() {
