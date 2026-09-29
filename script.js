@@ -1,3 +1,11 @@
+// --- GLOBAL STATE (declared first so all functions can safely reference them) ---
+const CLIENT_ID = Math.random().toString(36).substr(2, 9);
+let activeTab = 'orbital';
+let earthDistanceStr = 'Waiting for partner...';
+let myLat = null, myLon = null, partnerLat = null, partnerLon = null;
+let lastPartnerHeartbeat = 0;
+let sendingHeartbeat = false;
+
 // --- HOME SCREEN LOGIC ---
 const homeScreen = document.getElementById('home-screen');
 const mainApp = document.getElementById('main-app');
@@ -228,10 +236,6 @@ const compassArrow = document.getElementById('compass-arrow');
 const heartbeatBtn = document.getElementById('heartbeat-btn');
 const distanceWidget = document.querySelector('.distance-widget');
 
-let myLat = null, myLon = null, partnerLat = null, partnerLon = null;
-let lastPartnerHeartbeat = 0;
-let sendingHeartbeat = false;
-
 function sendFirebaseHeartbeat() {
     if (database && myLat !== null) {
         database.ref('users/' + CLIENT_ID).update({
@@ -405,8 +409,6 @@ const forceVal = document.getElementById('forceVal');
 const earthDisplacementVal = document.getElementById('earthDisplacementVal');
 
 // --- Geolocation Tracking ---
-const CLIENT_ID = Math.random().toString(36).substr(2, 9);
-let earthDistanceStr = "Waiting for partner...";
 
 function calculateHaversine(lat1, lon1, lat2, lon2) {
     const R = 6371; // Radius of the Earth in km
@@ -728,7 +730,6 @@ soundBtn.addEventListener('click', () => {
 });
 
 // --- TABS LOGIC ---
-let activeTab = 'orbital';
 document.querySelectorAll('.tab-nav .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-nav .tab-btn').forEach(b => b.classList.remove('active'));
