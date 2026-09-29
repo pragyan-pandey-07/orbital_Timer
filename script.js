@@ -208,8 +208,7 @@ const firebaseConfig = {
     appId: "1:435959832018:web:2d1241ba4c55ff19cb7c0b",
     measurementId: "G-B2XLGPHHTX",
     // NOTE: The databaseURL depends on the region you picked when creating the Realtime Database.
-    // If you picked US-Central, it is:
-    databaseURL: "https://pokomeetsoon-default-rtdb.firebaseio.com"
+    databaseURL: "https://pokomeetsoon-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
 
 // Initialize Firebase
