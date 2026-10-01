@@ -1,4 +1,4 @@
-const CACHE_NAME = 'orbital-v1';
+const CACHE_NAME = 'orbital-v2';
 const ASSETS = [
   '/',
   '/index.html',
@@ -24,12 +24,19 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Network-first for API calls, cache-first for assets
-  if (event.request.url.includes('/api/')) {
-    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
-  } else {
-    event.respondWith(
-      caches.match(event.request).then(cached => cached || fetch(event.request))
-    );
-  }
+  // Network-first strategy for everything to ensure updates are instantly received
+  event.respondWith(
+    fetch(event.request)
+      .then(networkResponse => {
+        // Only cache valid GET requests
+        if (event.request.method === 'GET' && networkResponse.ok) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+                cache.put(event.request, clone);
+            });
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request)) // Fallback to cache if offline
+  );
 });
