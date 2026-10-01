@@ -156,24 +156,46 @@
     <!-- TAB 5: Time Capsule -->
     <div id="capsule" class="tab-pane">
         <canvas id="capsuleCanvas"></canvas>
-        <div id="capsule-ui" class="hud-box" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; text-align: center;">
-            <h2>Event Horizon Time Capsule</h2>
+        <div id="capsule-ui" class="hud-box" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; text-align: center; max-height: 90vh; overflow-y: auto;">
+            <h2 style="margin-bottom: 10px;">Event Horizon Time Capsule</h2>
             
+            <!-- Status Panel -->
+            <div id="capsule-status" style="margin-bottom: 15px; font-size: 0.85rem; display: flex; justify-content: space-around; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                <div id="status-pragyan" style="color: var(--text-dim);">Pragyan: ⏳ Waiting...</div>
+                <div id="status-koshi" style="color: var(--text-dim);">Koshi: ⏳ Waiting...</div>
+            </div>
+
             <div id="capsule-locked-view" class="hidden">
-                <div style="font-size: 2rem; margin-bottom: 10px;">🕳️</div>
+                <div style="font-size: 1.5rem; margin-bottom: 5px;">🕳️</div>
                 <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 15px; letter-spacing: 1px;">
-                    A message is locked behind the event horizon.<br>It will emerge at T-Minus 0.
+                    Messages are locked in the event horizon.<br>They emerge at T-Minus 0.
                 </div>
             </div>
             
             <div id="capsule-compose-view">
-                <textarea id="capsule-input" placeholder="Write a message to be locked until you meet..." style="width: 100%; height: 120px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: white; border-radius: 8px; padding: 10px; font-family: inherit; resize: none; outline: none;"></textarea>
-                <button id="lock-capsule-btn" class="tab-btn active" style="margin-top: 15px; width: 100%; border: 1px solid rgba(255, 50, 150, 0.5); color: var(--pink); background: rgba(255, 50, 150, 0.1);">Send to the Black Hole</button>
+                <div style="margin-bottom: 10px; text-align: left; display: flex; align-items: center; justify-content: space-between;">
+                    <label style="color: var(--text-dim); font-size: 0.8rem;">I am writing as:</label>
+                    <select id="capsule-author" style="background: black; color: white; border: 1px solid var(--border); padding: 5px 10px; border-radius: 4px; outline: none; font-family: inherit;">
+                        <option value="pragyan">Pragyan</option>
+                        <option value="koshi">Koshi</option>
+                    </select>
+                </div>
+                <textarea id="capsule-input" placeholder="Write a message to be locked until you meet..." style="width: 100%; height: 100px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: white; border-radius: 8px; padding: 10px; font-family: inherit; resize: none; outline: none; box-sizing: border-box;"></textarea>
+                <button id="lock-capsule-btn" class="tab-btn active" style="margin-top: 15px; width: 100%; border: 1px solid rgba(255, 50, 150, 0.5); color: var(--pink); background: rgba(255, 50, 150, 0.1);">Lock Message</button>
             </div>
             
             <div id="capsule-revealed-view" class="hidden">
                 <div style="font-size: 2rem; margin-bottom: 10px;">✨</div>
-                <div id="capsule-message" style="font-size: 1rem; color: white; padding: 20px; background: rgba(0,243,255,0.1); border-radius: 8px; border: 1px solid var(--border); font-style: italic; white-space: pre-wrap;"></div>
+                
+                <div style="text-align: left; margin-bottom: 15px;">
+                    <h3 style="color: #aaffff; margin: 0 0 5px 0; font-size: 0.9rem;">Pragyan's Message:</h3>
+                    <div id="msg-pragyan" style="color: white; padding: 15px; background: rgba(0,243,255,0.1); border-radius: 8px; border: 1px solid rgba(0,243,255,0.2); font-style: italic; white-space: pre-wrap; font-size: 0.9rem;"></div>
+                </div>
+                
+                <div style="text-align: left;">
+                    <h3 style="color: #ffccaa; margin: 0 0 5px 0; font-size: 0.9rem;">Koshi's Message:</h3>
+                    <div id="msg-koshi" style="color: white; padding: 15px; background: rgba(255,100,50,0.1); border-radius: 8px; border: 1px solid rgba(255,100,50,0.2); font-style: italic; white-space: pre-wrap; font-size: 0.9rem;"></div>
+                </div>
             </div>
         </div>
     </div>

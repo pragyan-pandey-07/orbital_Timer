@@ -294,20 +294,50 @@ const capsuleLockedView = document.getElementById('capsule-locked-view');
 const capsuleRevealedView = document.getElementById('capsule-revealed-view');
 const capsuleInput = document.getElementById('capsule-input');
 const lockCapsuleBtn = document.getElementById('lock-capsule-btn');
-const capsuleMessageDisplay = document.getElementById('capsule-message');
+const capsuleAuthor = document.getElementById('capsule-author');
 
-let myCapsule = localStorage.getItem('myCapsule');
+const statusPragyan = document.getElementById('status-pragyan');
+const statusKoshi = document.getElementById('status-koshi');
+const msgPragyan = document.getElementById('msg-pragyan');
+const msgKoshi = document.getElementById('msg-koshi');
+
+let globalCapsules = { pragyan: null, koshi: null };
+
+// Auto-select author based on saved initial (P or K)
+if (localStorage.getItem('myInitial') === 'K') {
+    capsuleAuthor.value = 'koshi';
+} else {
+    capsuleAuthor.value = 'pragyan';
+}
+
+// Fetch any locally saved draft to prepopulate
+let myCapsuleDraft = localStorage.getItem('myCapsuleDraft') || '';
+capsuleInput.value = myCapsuleDraft;
+
+// Sync capsules from Firebase in realtime
+if (database) {
+    database.ref('capsules').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            globalCapsules.pragyan = data.pragyan || null;
+            globalCapsules.koshi = data.koshi || null;
+            if (activeTab === 'capsule') updateCapsuleView();
+        }
+    });
+}
 
 lockCapsuleBtn.addEventListener('click', () => {
-    if (capsuleInput.value.trim()) {
-        myCapsule = capsuleInput.value.trim();
-        localStorage.setItem('myCapsule', myCapsule);
-        updateCapsuleView();
-
-        if (database && myLat !== null) {
-            database.ref('users/' + CLIENT_ID).update({
-                capsule: myCapsule,
-                timestamp: Date.now()
+    const msg = capsuleInput.value.trim();
+    if (msg) {
+        localStorage.setItem('myCapsuleDraft', msg);
+        if (database) {
+            const author = capsuleAuthor.value; // 'pragyan' or 'koshi'
+            database.ref('capsules/' + author).set(msg).then(() => {
+                lockCapsuleBtn.textContent = "Locked! ✔️";
+                setTimeout(() => { lockCapsuleBtn.textContent = "Update Message"; }, 2000);
+            }).catch(err => {
+                console.error("Failed to save capsule:", err);
+                lockCapsuleBtn.textContent = "Error saving";
             });
         }
     }
@@ -316,19 +346,31 @@ lockCapsuleBtn.addEventListener('click', () => {
 function updateCapsuleView() {
     if (activeTab !== 'capsule') return;
     const remainingMs = Math.max(0, parseInt(localStorage.getItem('orbitalTargetDate')) || Date.now() - Date.now());
-    const hasCapsule = !!myCapsule; // Or partner's capsule if we fetched it
+
+    // Update Top Status Panel
+    statusPragyan.textContent = globalCapsules.pragyan ? "Pragyan: 🔒 Locked" : "Pragyan: ⏳ Waiting...";
+    statusKoshi.textContent = globalCapsules.koshi ? "Koshi: 🔒 Locked" : "Koshi: ⏳ Waiting...";
+    statusPragyan.style.color = globalCapsules.pragyan ? "#aaffff" : "var(--text-dim)";
+    statusKoshi.style.color = globalCapsules.koshi ? "#aaffff" : "var(--text-dim)";
 
     capsuleComposeView.classList.add('hidden');
     capsuleLockedView.classList.add('hidden');
     capsuleRevealedView.classList.add('hidden');
 
-    if (!hasCapsule) {
-        capsuleComposeView.classList.remove('hidden');
-    } else if (remainingMs > 0) {
+    if (remainingMs > 0) {
+        // Still counting down: Show locked view + Compose view (so they can edit their message)
         capsuleLockedView.classList.remove('hidden');
+        capsuleComposeView.classList.remove('hidden');
     } else {
+        // Merged! Reveal messages
         capsuleRevealedView.classList.remove('hidden');
-        capsuleMessageDisplay.textContent = myCapsule; // Displaying own for now
+        
+        msgPragyan.textContent = globalCapsules.pragyan ? globalCapsules.pragyan : "[No message left]";
+        msgKoshi.textContent = globalCapsules.koshi ? globalCapsules.koshi : "[No message left]";
+        
+        // Hide missing ones slightly
+        msgPragyan.style.opacity = globalCapsules.pragyan ? "1" : "0.5";
+        msgKoshi.style.opacity = globalCapsules.koshi ? "1" : "0.5";
     }
 }
 setInterval(updateCapsuleView, 1000);
@@ -429,7 +471,6 @@ function broadcastLocation(lat, lon) {
         database.ref('users/' + CLIENT_ID).update({
             lat: lat,
             lon: lon,
-            capsule: myCapsule,
             timestamp: Date.now()
         });
     }
@@ -487,13 +528,7 @@ if (database) {
                 partnerLat = partnerLoc.lat;
                 partnerLon = partnerLoc.lon;
 
-                // Handle Partner Capsule
-                if (partnerLoc.capsule && activeTab === 'capsule') {
-                    const remainingMs = Math.max(0, parseInt(localStorage.getItem('orbitalTargetDate')) || Date.now() - Date.now());
-                    if (remainingMs <= 0) {
-                        capsuleMessageDisplay.textContent = partnerLoc.capsule;
-                    }
-                }
+
 
                 // Handle Partner Heartbeat
                 if (partnerLoc.heartbeat) {
