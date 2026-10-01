@@ -298,8 +298,6 @@ const capsuleAuthor = document.getElementById('capsule-author');
 
 const statusPragyan = document.getElementById('status-pragyan');
 const statusKoshi = document.getElementById('status-koshi');
-const msgPragyan = document.getElementById('msg-pragyan');
-const msgKoshi = document.getElementById('msg-koshi');
 
 let globalCapsules = { pragyan: null, koshi: null };
 
@@ -313,6 +311,11 @@ if (localStorage.getItem('myInitial') === 'K') {
 // Fetch any locally saved draft to prepopulate
 let myCapsuleDraft = localStorage.getItem('myCapsuleDraft') || '';
 capsuleInput.value = myCapsuleDraft;
+
+// Save draft as they type
+capsuleInput.addEventListener('input', () => {
+    localStorage.setItem('myCapsuleDraft', capsuleInput.value);
+});
 
 // Sync capsules from Firebase in realtime
 if (database) {
@@ -329,12 +332,21 @@ if (database) {
 lockCapsuleBtn.addEventListener('click', () => {
     const msg = capsuleInput.value.trim();
     if (msg) {
-        localStorage.setItem('myCapsuleDraft', msg);
         if (database) {
             const author = capsuleAuthor.value; // 'pragyan' or 'koshi'
-            database.ref('capsules/' + author).set(msg).then(() => {
-                lockCapsuleBtn.textContent = "Locked! ✔️";
-                setTimeout(() => { lockCapsuleBtn.textContent = "Update Message"; }, 2000);
+            
+            // Push as a new message to support multiple messages
+            const newMsgRef = database.ref('capsules/' + author).push();
+            newMsgRef.set({
+                text: msg,
+                timestamp: Date.now()
+            }).then(() => {
+                // Clear input so they can type another
+                capsuleInput.value = '';
+                localStorage.removeItem('myCapsuleDraft');
+                
+                lockCapsuleBtn.textContent = "Message Added! ✔️";
+                setTimeout(() => { lockCapsuleBtn.textContent = "Lock Another Message"; }, 2000);
             }).catch(err => {
                 console.error("Failed to save capsule:", err);
                 lockCapsuleBtn.textContent = "Error saving";
@@ -343,34 +355,68 @@ lockCapsuleBtn.addEventListener('click', () => {
     }
 });
 
+// Helper to extract messages safely (handles legacy string format if they used it already)
+function getMessages(capsuleData) {
+    if (!capsuleData) return [];
+    if (typeof capsuleData === 'string') return [{text: capsuleData, timestamp: null}];
+    // Object with push keys
+    return Object.values(capsuleData).sort((a, b) => a.timestamp - b.timestamp);
+}
+
+function renderMessages(msgs, containerId, emptyText) {
+    const container = document.getElementById(containerId);
+    if (!container) return; // safety
+    if (msgs.length === 0) {
+        container.innerHTML = `<div style="color: white; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; font-style: italic; opacity: 0.5;">${emptyText}</div>`;
+        return;
+    }
+    container.innerHTML = msgs.map(m => {
+        const dateStr = m.timestamp ? `<div style="font-size:0.7rem; color:var(--text-dim); margin-bottom:5px;">${new Date(m.timestamp).toLocaleString()}</div>` : '';
+        return `<div style="color: white; padding: 15px; margin-bottom: 10px; background: rgba(0,243,255,0.1); border-radius: 8px; font-style: italic; white-space: pre-wrap; font-size: 0.9rem;">${dateStr}${m.text}</div>`;
+    }).join('');
+}
+
+function renderMessagesKoshi(msgs, containerId, emptyText) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    if (msgs.length === 0) {
+        container.innerHTML = `<div style="color: white; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; font-style: italic; opacity: 0.5;">${emptyText}</div>`;
+        return;
+    }
+    container.innerHTML = msgs.map(m => {
+        const dateStr = m.timestamp ? `<div style="font-size:0.7rem; color:var(--text-dim); margin-bottom:5px;">${new Date(m.timestamp).toLocaleString()}</div>` : '';
+        return `<div style="color: white; padding: 15px; margin-bottom: 10px; background: rgba(255,100,50,0.1); border-radius: 8px; font-style: italic; white-space: pre-wrap; font-size: 0.9rem;">${dateStr}${m.text}</div>`;
+    }).join('');
+}
+
 function updateCapsuleView() {
     if (activeTab !== 'capsule') return;
     const remainingMs = Math.max(0, parseInt(localStorage.getItem('orbitalTargetDate')) || Date.now() - Date.now());
 
+    const pMsgs = getMessages(globalCapsules.pragyan);
+    const kMsgs = getMessages(globalCapsules.koshi);
+
     // Update Top Status Panel
-    statusPragyan.textContent = globalCapsules.pragyan ? "Pragyan: 🔒 Locked" : "Pragyan: ⏳ Waiting...";
-    statusKoshi.textContent = globalCapsules.koshi ? "Koshi: 🔒 Locked" : "Koshi: ⏳ Waiting...";
-    statusPragyan.style.color = globalCapsules.pragyan ? "#aaffff" : "var(--text-dim)";
-    statusKoshi.style.color = globalCapsules.koshi ? "#aaffff" : "var(--text-dim)";
+    statusPragyan.textContent = pMsgs.length > 0 ? `Pragyan: 🔒 ${pMsgs.length} Msg${pMsgs.length>1?'s':''}` : "Pragyan: ⏳ Waiting...";
+    statusKoshi.textContent = kMsgs.length > 0 ? `Koshi: 🔒 ${kMsgs.length} Msg${kMsgs.length>1?'s':''}` : "Koshi: ⏳ Waiting...";
+    
+    statusPragyan.style.color = pMsgs.length > 0 ? "#aaffff" : "var(--text-dim)";
+    statusKoshi.style.color = kMsgs.length > 0 ? "#ffccaa" : "var(--text-dim)"; // Fixed color for Koshi status
 
     capsuleComposeView.classList.add('hidden');
     capsuleLockedView.classList.add('hidden');
     capsuleRevealedView.classList.add('hidden');
 
     if (remainingMs > 0) {
-        // Still counting down: Show locked view + Compose view (so they can edit their message)
+        // Still counting down: Show locked view + Compose view
         capsuleLockedView.classList.remove('hidden');
         capsuleComposeView.classList.remove('hidden');
     } else {
         // Merged! Reveal messages
         capsuleRevealedView.classList.remove('hidden');
         
-        msgPragyan.textContent = globalCapsules.pragyan ? globalCapsules.pragyan : "[No message left]";
-        msgKoshi.textContent = globalCapsules.koshi ? globalCapsules.koshi : "[No message left]";
-        
-        // Hide missing ones slightly
-        msgPragyan.style.opacity = globalCapsules.pragyan ? "1" : "0.5";
-        msgKoshi.style.opacity = globalCapsules.koshi ? "1" : "0.5";
+        renderMessages(pMsgs, 'msg-pragyan-container', '[No messages left]');
+        renderMessagesKoshi(kMsgs, 'msg-koshi-container', '[No messages left]');
     }
 }
 setInterval(updateCapsuleView, 1000);
