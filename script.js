@@ -1468,3 +1468,4 @@ function entropyLoop() {
 requestAnimationFrame(qkdLoop);
 requestAnimationFrame(lorenzLoop);
 requestAnimationFrame(entropyLoop);
+requestAnimationFrame(loop);
