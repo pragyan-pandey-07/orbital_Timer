@@ -54,8 +54,9 @@
     <div id="main-app" class="hidden">
         <div class="tab-nav">
             <button class="tab-btn active" data-tab="orbital">Orbit</button>
-            <button class="tab-btn" data-tab="quantum">Entangle</button>
-            <button class="tab-btn" data-tab="bloch">Bloch</button>
+            <button class="tab-btn" data-tab="qkd">Key</button>
+            <button class="tab-btn" data-tab="lorenz">Fate</button>
+            <button class="tab-btn" data-tab="entropy">Entropy</button>
             <button class="tab-btn" data-tab="epicycle">Fourier</button>
             <button class="tab-btn" data-tab="capsule">Capsule</button>
         </div>
@@ -105,34 +106,54 @@
         </div>
     </div>
 
-    <!-- TAB 2: Quantum Entanglement -->
-    <div id="quantum" class="tab-pane">
-        <canvas id="quantumCanvas"></canvas>
-        <div id="quantum-ui">
-            <div class="quantum-hud">
-                <div id="quantum-countdown">00:00:00:00</div>
-                <div id="quantum-elapsed" class="quantum-subtext">Spooky action at a distance</div>
-                <div id="quantum-remaining" class="quantum-subtext">Distance remaining</div>
+    <!-- TAB 2: Quantum Key Distribution (BB84 Protocol) -->
+    <div id="qkd" class="tab-pane">
+        <canvas id="qkdCanvas"></canvas>
+        <div id="qkd-ui" class="hud-box" style="position: absolute; bottom: 15vh; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; text-align: center;">
+            <h2 style="margin-bottom: 5px;">Quantum Key (BB84)</h2>
+            <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 15px;">
+                Generate an entangled, mathematically unbreakable key.
+            </div>
+            <div id="qkd-grid" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin-bottom: 15px; min-height: 40px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px solid rgba(0,243,255,0.2);">
+                <!-- Photons will be generated here -->
+            </div>
+            <div id="qkd-status" style="font-size: 0.85rem; color: #aaffff; margin-bottom: 15px; height: 1.2rem;">Waiting to generate key...</div>
+            <button id="qkd-generate-btn" class="tab-btn active" style="width: 100%; border: 1px solid rgba(0, 243, 255, 0.5); color: #00f3ff; background: rgba(0, 243, 255, 0.1);">Generate & Send Key</button>
+            <button id="qkd-measure-btn" class="tab-btn" style="width: 100%; margin-top: 10px; border: 1px solid rgba(255, 100, 50, 0.5); color: #ff6432; background: rgba(255, 100, 50, 0.1);">Measure Incoming Key</button>
+        </div>
+    </div>
+
+    <!-- TAB 3: Lorenz Attractor (Fate/Chaos) -->
+    <div id="lorenz" class="tab-pane">
+        <canvas id="lorenzCanvas"></canvas>
+        <div id="lorenz-ui" class="hud-box" style="position: absolute; bottom: 15vh; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; text-align: center;">
+            <h2 style="margin-bottom: 5px;">The Butterfly Effect</h2>
+            <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 15px;">
+                Sensitive dependence on initial conditions.<br>Two chaotic lives, drawn to the same attractor.
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #aaffff;">
+                <span id="lorenz-p-pos">P: (0, 0, 0)</span>
+                <span id="lorenz-k-pos" style="color: #ffccaa;">K: (0, 0, 0)</span>
             </div>
         </div>
     </div>
 
-    <!-- TAB 3: Bloch Sphere -->
-    <div id="bloch" class="tab-pane">
-        <div id="three-container"></div>
-        <div id="bloch-ui" class="hud-box">
-            <h2>Bloch Sphere</h2>
-            <div id="katex-state"></div>
-            <div class="separator"></div>
-            <div class="hud-line">
-                <span class="label">|α|² (Apart)</span>
-                <span id="alphaVal" class="value">1.000</span>
+    <!-- TAB 4: Entropy (Thermodynamics) -->
+    <div id="entropy" class="tab-pane">
+        <canvas id="entropyCanvas"></canvas>
+        <div id="entropy-ui" class="hud-box" style="position: absolute; bottom: 15vh; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; text-align: center;">
+            <h2 style="margin-bottom: 5px;">Reversing Entropy</h2>
+            <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 15px;">
+                The 2nd Law of Thermodynamics states chaos always increases.<br>Except when time runs out.
             </div>
             <div class="hud-line">
-                <span class="label">|β|² (Together)</span>
-                <span id="betaVal" class="value">0.000</span>
+                <span class="label">System Temp (T)</span>
+                <span id="entropy-temp" class="value">300.0 K</span>
             </div>
-            <button id="measure-btn">Measure State</button>
+            <div class="hud-line">
+                <span class="label">Entropy (S)</span>
+                <span id="entropy-s" class="value">High</span>
+            </div>
         </div>
     </div>
 
