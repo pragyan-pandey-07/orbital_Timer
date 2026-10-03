@@ -918,6 +918,7 @@ saveDateBtn.addEventListener('click', () => {
 let fourierY = [];
 let fourierTime = 0;
 let fourierPath = [];
+window.addEventListener('resize', () => { fourierPath = []; });
 let fourierMaxTerms = 362;
 
 // --- CAPSULE BLACK HOLE LOGIC ---
@@ -1101,13 +1102,13 @@ if (fourierSlider) {
     });
 }
 
-function epicycle(x, y, rotation, fourier) {
+function epicycle(x, y, rotation, fourier, scale = 1) {
     for (let i = 0; i < fourierMaxTerms; i++) {
         if (!fourier[i]) continue;
         let prevx = x;
         let prevy = y;
         let freq = fourier[i].freq;
-        let radius = fourier[i].amp;
+        let radius = fourier[i].amp * scale;
         let phase = fourier[i].phase;
 
         x += radius * Math.cos(freq * fourierTime + phase + rotation);
@@ -1148,7 +1149,17 @@ function fourierLoop() {
         fCtx.globalAlpha = 1.0;
 
         if (fourierY.length > 0) {
-            const v = epicycle(width / 2, height / 2, 0, fourierY);
+            let cy = height / 2;
+            let scale = 1;
+            
+            // Adjust for mobile screens
+            if (width < 700) {
+                scale = width / 700;
+                // Move the center up so it doesn't overlap with the bottom UI
+                cy = (height - 250) / 2;
+            }
+
+            const v = epicycle(width / 2, cy, 0, fourierY, scale);
             fourierPath.unshift(v);
 
             fCtx.beginPath();
